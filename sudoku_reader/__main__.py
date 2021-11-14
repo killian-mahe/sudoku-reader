@@ -1,16 +1,96 @@
-# This is a sample Python script.
+"""
+Main application program.
+"""
+import traceback
+import sys
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Signal
+import numpy as np
+
+from sudoku_reader.interfaces import AlgorithmType, Resolver
+from sudoku_reader.gui import MainWindow
+from sudoku_reader.csp import SudokuCSP
+from sudoku_reader.algorithms import (
+    backtracking_search,
+    most_constrained_variable,
+    minimum_remaining_value,
+    least_constraining_value,
+    AC3
+)
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+class SudokuResolver(Resolver):
+    """
+    A worker who manage the resolving of the sudoku.
+    """
+
+    result_ready = Signal((AlgorithmType, np.ndarray))
+    error = Signal(str)
+
+    def do_work(
+        self,
+        algorithm_type: AlgorithmType = AlgorithmType.BACKTRACKING,
+        sudoku_map: np.array = np.array([]),
+    ):
+        """
+        Do the asked work using the choosen algorithm.
+
+        Parameters
+        ----------
+        algorithm_type : AlgorithmType
+            A type of algorithm to user to resolve the sudoku.
+        sudoku_map : np.array
+            A array containing the map of the sudoku.
+
+        Returns
+        -------
+        None
+        """
+        try:
+            algorithm_type = AlgorithmType[algorithm_type.name]
+
+            csp = SudokuCSP(sudoku_map)
+            assignment = None
+
+            if algorithm_type is AlgorithmType.BACKTRACKING:
+                assignment = backtracking_search(csp)
+            elif algorithm_type == AlgorithmType.MRV:
+                assignment = backtracking_search(
+                    csp, select_unassigned_variable=minimum_remaining_value
+                )
+            elif algorithm_type == AlgorithmType.DEGREE_H:
+                assignment = backtracking_search(
+                    csp, select_unassigned_variable=most_constrained_variable
+                )
+            elif algorithm_type == AlgorithmType.LEAST_CONSTRAINING_H:
+                assignment = backtracking_search(
+                    csp, order_domain_values=least_constraining_value
+                )
+            elif algorithm_type == AlgorithmType.AC3:
+                csp = AC3(csp)
+                assignment = backtracking_search(
+                    csp
+                )
+
+            if assignment is not None:
+                sudoku_map = csp.get_resulted_map(assignment)
+            else:
+                self.error.emit(
+                    f"Can't find a solution using {algorithm_type.value} algorithm."
+                )
+        except Exception:
+            print(traceback.format_exc())
+            self.error.emit(traceback.format_exc())
+        self.result_ready.emit(algorithm_type, sudoku_map)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+if __name__ == "__main__":
+    app = QApplication([])
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    sudoku_solver = SudokuResolver()
+    main_window = MainWindow("Sudoku solver", sudoku_solver)
+    main_window.resize(1000, 700)
+    main_window.show()
+
+    sys.exit(app.exec())
