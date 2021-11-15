@@ -6,8 +6,8 @@ This module manage the graphical user interface of the application.
 """
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QRectF, QPointF, Signal, QThread, Qt
-from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen, QPixmap
+from PySide6.QtCore import QRectF, QPointF, Signal, QThread, Qt, QLine
+from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen, QPixmap, QColor, QColorConstants
 from PySide6.QtWidgets import (
     QMainWindow,
     QMenuBar,
@@ -55,8 +55,9 @@ class MainWindow(QMainWindow):
     """
 
     resolve = Signal((AlgorithmType, np.ndarray))
+    analyse_picture = Signal(np.ndarray)
 
-    def __init__(self, title: str, resolver: Resolver):
+    def __init__(self, title: str, resolver: Resolver, importer):
         """
         Constructs all the necessary attributes for the main window object.
         """
@@ -96,6 +97,14 @@ class MainWindow(QMainWindow):
         )
         resolver.moveToThread(self.resolver_thread)
 
+        self.importer_thread = QThread()
+        self.analyse_picture.connect(importer.do_work)
+        importer.result_ready.connect(self.handle_picture_import)
+        importer.error.connect(
+            lambda x: self.handle_error("An error as occured while importing the puzzle.")
+        )
+        importer.moveToThread(self.importer_thread)
+
         self.setCentralWidget(QtWidgets.QWidget())
         self.centralWidget().setLayout(self.layout)
 
@@ -103,6 +112,7 @@ class MainWindow(QMainWindow):
         self.create_sudoku_view(self.size)
 
         self.resolver_thread.start()
+        self.importer_thread.start()
 
     def create_sudoku_view(self, n: int = 3):
 
@@ -272,6 +282,8 @@ class MainWindow(QMainWindow):
         picture_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open Image", "/", "Image Files (*.png *.jpg *.bmp)"
         )
+        if not picture_path:
+            return
         self.picture = skimage.io.imread(picture_path)
         pixmap = QPixmap(picture_path)
         self.picture_scene.clear()
@@ -279,6 +291,7 @@ class MainWindow(QMainWindow):
         self.picture_view.fitInView(
             self.picture_scene.itemsBoundingRect(), Qt.KeepAspectRatio
         )
+        self.analyse_picture.emit(self.picture)
 
     def handle_generation(self):
         action = self.sender()
@@ -312,6 +325,18 @@ class MainWindow(QMainWindow):
                     self.digits_map[x, y] = 0
 
         self.resolve.emit(algorithm_type, self.digits_map)
+
+    def handle_picture_import(self, result: tuple):
+        cols, rows = result
+        pen = QPen()
+        pen.setWidth(10)
+        pen.setColor(QColorConstants.Red)
+
+        for y in range(len(rows)):
+            self.picture_scene.addLine(QLine(cols[0], rows[y], cols[-1], rows[y]), pen)
+
+        for x in range(len(cols)):
+            self.picture_scene.addLine(QLine(cols[x], rows[0], cols[x], rows[-1]), pen)
 
     def handle_result(self, algorithm_type: AlgorithmType, sudoku_map: np.array):
         print(f"Sudoku resolved using {algorithm_type.value} algorithm!")

@@ -97,6 +97,7 @@ class PictureImporter(QObject):
 
     def do_work(self, picture: np.ndarray):
         try:
+            print("Trying to import the picture")
             picture = binarize(picture)
             picture = binary_dilatation(picture)
 
@@ -115,7 +116,8 @@ if __name__ == "__main__":
     app = QApplication([])
 
     sudoku_solver = SudokuResolver()
-    main_window = MainWindow("Sudoku solver", sudoku_solver)
+    picture_importer = PictureImporter()
+    main_window = MainWindow("Sudoku solver", sudoku_solver, picture_importer)
     main_window.resize(1000, 700)
     main_window.show()
 
