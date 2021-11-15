@@ -140,6 +140,7 @@ def least_constraining_value(var: any, assignment: dict, csp: CSP):
     -------
     List[any]
     """
+
     def conflicts_count(value):
         """
         Count the number of conflicts with the neighbours of this variable.
@@ -156,7 +157,11 @@ def least_constraining_value(var: any, assignment: dict, csp: CSP):
         values_count = 0
         for constraint in csp.var_to_const[var]:
             for var2 in constraint.scope:
-                if var is not var2 and var2 in assignment and not constraint.satisfied(assignment | {var: value}):
+                if (
+                    var is not var2
+                    and var2 in assignment
+                    and not constraint.satisfied(assignment | {var: value})
+                ):
                     values_count += 1
         return values_count
 

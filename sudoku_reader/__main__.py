@@ -5,18 +5,25 @@ import traceback
 import sys
 
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QObject
 import numpy as np
 
 from sudoku_reader.interfaces import AlgorithmType, Resolver
 from sudoku_reader.gui import MainWindow
 from sudoku_reader.csp import SudokuCSP
+from sudoku_reader.picture import (
+    binarize,
+    binary_dilatation,
+    get_largest_connected_components,
+    get_highest_spikes,
+    get_sub_pictures,
+)
 from sudoku_reader.algorithms import (
     backtracking_search,
     most_constrained_variable,
     minimum_remaining_value,
     least_constraining_value,
-    AC3
+    AC3,
 )
 
 
@@ -69,9 +76,7 @@ class SudokuResolver(Resolver):
                 )
             elif algorithm_type == AlgorithmType.AC3:
                 csp = AC3(csp)
-                assignment = backtracking_search(
-                    csp
-                )
+                assignment = backtracking_search(csp)
 
             if assignment is not None:
                 sudoku_map = csp.get_resulted_map(assignment)
@@ -83,6 +88,27 @@ class SudokuResolver(Resolver):
             print(traceback.format_exc())
             self.error.emit(traceback.format_exc())
         self.result_ready.emit(algorithm_type, sudoku_map)
+
+
+class PictureImporter(QObject):
+
+    result_ready = Signal(tuple)
+    error = Signal(str)
+
+    def do_work(self, picture: np.ndarray):
+        try:
+            picture = binarize(picture)
+            picture = binary_dilatation(picture)
+
+            picture = get_largest_connected_components(picture)
+
+            x_proj = get_highest_spikes(picture, n=10, axis=0)
+            y_proj = get_highest_spikes(picture, n=10, axis=1)
+        except Exception:
+            print(traceback.format_exc())
+            self.error.emit(traceback.format_exc())
+
+        self.result_ready.emit((x_proj, y_proj))
 
 
 if __name__ == "__main__":

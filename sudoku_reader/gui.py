@@ -22,7 +22,8 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QLabel,
-    QLineEdit, QGraphicsPixmapItem,
+    QLineEdit,
+    QGraphicsPixmapItem,
 )
 import skimage.io
 import numpy as np
@@ -275,7 +276,9 @@ class MainWindow(QMainWindow):
         pixmap = QPixmap(picture_path)
         self.picture_scene.clear()
         self.picture_scene.addItem(QGraphicsPixmapItem(pixmap))
-        self.picture_view.fitInView(self.picture_scene.itemsBoundingRect(), Qt.KeepAspectRatio)
+        self.picture_view.fitInView(
+            self.picture_scene.itemsBoundingRect(), Qt.KeepAspectRatio
+        )
 
     def handle_generation(self):
         action = self.sender()
