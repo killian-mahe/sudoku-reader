@@ -2,7 +2,9 @@
 Picture treatment module.
 """
 import numpy as np
-import skimage.color, skimage.filters
+import skimage.color
+import skimage.filters
+import skimage.io
 from scipy import ndimage
 from scipy.signal import argrelextrema
 
@@ -38,7 +40,7 @@ def binary_dilatation(picture: np.ndarray) -> np.ndarray:
     -------
     N x M binary matrix.
     """
-    return ndimage.binary_dilation(picture).astype(picture.dtype)
+    return ndimage.binary_dilation(picture, iterations=2).astype(picture.dtype)
 
 
 def get_largest_connected_components(picture: np.ndarray):
@@ -63,6 +65,31 @@ def get_largest_connected_components(picture: np.ndarray):
     return np.where(filtered_img == 0, filtered_img, 1)
 
 
+def clear_spikes(binary_picture: np.ndarray, spikes: list, axis: int = 0) -> list:
+    """
+    Ajust the spike position by checking the max value around the vigen spike.
+
+    Parameters
+    ----------
+    binary_picture : np.ndarray
+    spikes : list
+    axis : int
+
+    Returns
+    -------
+    list of int
+    """
+    grid_width = spikes[-1] - spikes[0]
+    margin = int(grid_width * 0.025)
+    proj = binary_picture.sum(axis=axis)
+    for i in range(len(spikes)):
+        spike = spikes[i]
+        lower_bound = max(0, spike - margin)
+        upper_bound = min(spike + margin, len(proj))
+        spikes[i] = lower_bound + np.argmax(proj[lower_bound:upper_bound])
+    return spikes
+
+
 def get_highest_spikes(picture: np.ndarray, n: int, axis: int = 0) -> np.ndarray:
     """
     Get the highest spikes over the given axis.
@@ -82,28 +109,44 @@ def get_highest_spikes(picture: np.ndarray, n: int, axis: int = 0) -> np.ndarray
 
     spikes = argrelextrema(diff, np.greater, order=int(len(diff) * 0.8 * 0.05))[0]
 
+    spikes = clear_spikes(picture, spikes, axis)
+
     highest_spikes = spikes[
         np.argpartition(proj[spikes], -min(n, len(spikes)))[-min(n, len(spikes)) :]
     ]
     return np.sort(highest_spikes)
 
 
-def get_sub_pictures(picture: np.ndarray, rows: list, cols: list):
+def filter_digit_pictures(
+    bin_picture: np.ndarray, rows: np.ndarray, cols: np.ndarray
+) -> list[tuple]:
     """
-    Get all the sub sequences of a picture.
+    Get the digits pictures of a sudoku map.
 
     Parameters
     ----------
-    picture :  np.ndarray
-    rows : list of int
-    cols : list of int
+    bin_picture : np.ndarray
+        Binarized picture
+    rows : np.ndarray
+    cols : np.ndarray
 
     Returns
     -------
-    list of np.ndarray
+    list of tuple
     """
-    sub_pictures = list()
+    digits = list()
+
     for i in range(len(rows) - 1):
         for j in range(len(cols) - 1):
-            sub_pictures.append(picture[rows[i] : rows[i + 1], cols[j] : cols[j + 1]])
-    return sub_pictures
+
+            margin = int((cols[j + 1] - cols[j]) * 0.2)
+
+            bin_case = bin_picture[
+                rows[i] + margin : rows[i + 1] - margin,
+                cols[j] + margin : cols[j + 1] - margin,
+            ]
+
+            if np.mean(bin_case.flatten()) > 0.05:
+                digits.append(((i, j), bin_case))
+
+    return digits

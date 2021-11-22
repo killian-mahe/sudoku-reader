@@ -7,7 +7,15 @@ This module manage the graphical user interface of the application.
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QRectF, QPointF, Signal, QThread, Qt, QLine
-from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen, QPixmap, QColor, QColorConstants
+from PySide6.QtGui import (
+    QIcon,
+    QAction,
+    QFont,
+    QPainter,
+    QPen,
+    QPixmap,
+    QColorConstants,
+)
 from PySide6.QtWidgets import (
     QMainWindow,
     QMenuBar,
@@ -101,7 +109,9 @@ class MainWindow(QMainWindow):
         self.analyse_picture.connect(importer.do_work)
         importer.result_ready.connect(self.handle_picture_import)
         importer.error.connect(
-            lambda x: self.handle_error("An error as occured while importing the puzzle.")
+            lambda x: self.handle_error(
+                "An error as occured while importing the puzzle."
+            )
         )
         importer.moveToThread(self.importer_thread)
 

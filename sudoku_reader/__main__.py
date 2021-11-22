@@ -16,7 +16,7 @@ from sudoku_reader.picture import (
     binary_dilatation,
     get_largest_connected_components,
     get_highest_spikes,
-    get_sub_pictures,
+    filter_digit_pictures,
 )
 from sudoku_reader.algorithms import (
     backtracking_search,
@@ -99,12 +99,14 @@ class PictureImporter(QObject):
         try:
             print("Trying to import the picture")
             picture = binarize(picture)
-            picture = binary_dilatation(picture)
+            bin_picture = binary_dilatation(picture)
 
-            picture = get_largest_connected_components(picture)
+            grid_picture = get_largest_connected_components(bin_picture)
 
-            x_proj = get_highest_spikes(picture, n=10, axis=0)
-            y_proj = get_highest_spikes(picture, n=10, axis=1)
+            x_proj = get_highest_spikes(grid_picture, n=10, axis=0)
+            y_proj = get_highest_spikes(grid_picture, n=10, axis=1)
+
+            digits = filter_digit_pictures(bin_picture, y_proj, x_proj)
         except Exception:
             print(traceback.format_exc())
             self.error.emit(traceback.format_exc())
