@@ -4,3 +4,4 @@ ipykernel~=6.5.0
 requests~=2.26.0
 PySide6~=6.2.1
 tensorflow~=2.7.0
+sklearn~=1.0.1
