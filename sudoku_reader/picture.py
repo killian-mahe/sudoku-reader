@@ -40,7 +40,7 @@ def binary_dilatation(picture: np.ndarray) -> np.ndarray:
     -------
     N x M binary matrix.
     """
-    return ndimage.binary_dilation(picture, iterations=2).astype(picture.dtype)
+    return ndimage.binary_dilation(picture, iterations=3).astype(picture.dtype)
 
 
 def get_largest_connected_components(picture: np.ndarray):
@@ -107,7 +107,7 @@ def get_highest_spikes(picture: np.ndarray, n: int, axis: int = 0) -> np.ndarray
     proj = picture.sum(axis=axis)
     diff = np.diff(proj)
 
-    spikes = argrelextrema(diff, np.greater, order=int(len(diff) * 0.8 * 0.05))[0]
+    spikes = argrelextrema(diff, np.greater, order=int(len(diff) * 0.8 * 0.05))[0] + 1
 
     spikes = clear_spikes(picture, spikes, axis)
 
@@ -119,7 +119,7 @@ def get_highest_spikes(picture: np.ndarray, n: int, axis: int = 0) -> np.ndarray
 
 def filter_digit_pictures(
     bin_picture: np.ndarray, rows: np.ndarray, cols: np.ndarray
-) -> list[tuple]:
+) -> list:
     """
     Get the digits pictures of a sudoku map.
 
@@ -137,16 +137,22 @@ def filter_digit_pictures(
     digits = list()
 
     for i in range(len(rows) - 1):
+        margin = int((rows[1] - rows[0]) * 0.15)
         for j in range(len(cols) - 1):
 
-            margin = int((cols[j + 1] - cols[j]) * 0.2)
-
-            bin_case = bin_picture[
-                rows[i] + margin : rows[i + 1] - margin,
-                cols[j] + margin : cols[j + 1] - margin,
+            bin_cell = bin_picture[
+                rows[i] + 2 * margin : rows[i + 1] - 2 * margin,
+                cols[j] + 2 * margin : cols[j + 1] - 2 * margin,
             ]
 
-            if np.mean(bin_case.flatten()) > 0.05:
-                digits.append(((i, j), bin_case))
-
+            if np.std(bin_cell.flatten()) > 0.3:
+                digits.append(
+                    [
+                        (i, j),
+                        bin_picture[
+                            rows[i] + margin : rows[i + 1] - margin,
+                            cols[j] + margin : cols[j + 1] - margin,
+                        ],
+                    ]
+                )
     return digits

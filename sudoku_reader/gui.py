@@ -336,17 +336,11 @@ class MainWindow(QMainWindow):
 
         self.resolve.emit(algorithm_type, self.digits_map)
 
-    def handle_picture_import(self, result: tuple):
-        cols, rows = result
-        pen = QPen()
-        pen.setWidth(10)
-        pen.setColor(QColorConstants.Red)
-
-        for y in range(len(rows)):
-            self.picture_scene.addLine(QLine(cols[0], rows[y], cols[-1], rows[y]), pen)
-
-        for x in range(len(cols)):
-            self.picture_scene.addLine(QLine(cols[x], rows[0], cols[x], rows[-1]), pen)
+    def handle_picture_import(self, result: np.array):
+        result = np.array(result)
+        self.digits_map = result
+        print(type(self.digits_map))
+        self.update_sudoku_view()
 
     def handle_result(self, algorithm_type: AlgorithmType, sudoku_map: np.array):
         print(f"Sudoku resolved using {algorithm_type.value} algorithm!")

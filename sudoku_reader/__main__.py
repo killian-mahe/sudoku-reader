@@ -18,6 +18,7 @@ from sudoku_reader.picture import (
     get_highest_spikes,
     filter_digit_pictures,
 )
+from sudoku_reader.digits import filter_cells, predict_digit_from_picture
 from sudoku_reader.algorithms import (
     backtracking_search,
     most_constrained_variable,
@@ -92,7 +93,7 @@ class SudokuResolver(Resolver):
 
 class PictureImporter(QObject):
 
-    result_ready = Signal(tuple)
+    result_ready = Signal(list)
     error = Signal(str)
 
     def do_work(self, picture: np.ndarray):
@@ -107,11 +108,19 @@ class PictureImporter(QObject):
             y_proj = get_highest_spikes(grid_picture, n=10, axis=1)
 
             digits = filter_digit_pictures(bin_picture, y_proj, x_proj)
+
+            digits = filter_cells(digits)
+            prediction = predict_digit_from_picture(digits)
+
+            grid = np.zeros((9, 9), dtype=int)
+            for (x, y), ch in prediction:
+                grid[y, x] = ch
+
+            self.result_ready.emit(grid)
+
         except Exception:
             print(traceback.format_exc())
             self.error.emit(traceback.format_exc())
-
-        self.result_ready.emit((x_proj, y_proj))
 
 
 if __name__ == "__main__":
