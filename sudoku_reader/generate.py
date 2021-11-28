@@ -39,14 +39,14 @@ for sys_font in all_fonts:
             f_flag[f_idx] = 1
             for ch in digits:
                 pos_idx = 0
-                for i in [-3, 0, 3]:
-                    for j in [-3, 0, 3]:
+                for i in [-1, 0, 1]:
+                    for j in [-1, 0, 1]:
 
                         image = Image.new("RGB", imgSize, (0, 0, 0))
                         draw = ImageDraw.Draw(image)
 
                         style_idx = 0
-                        for y in [-1, 0, 1]:
+                        for y in [0]:
                             for x in [-1, 0, 1]:
                                 position = (x + i + init_position[0], y + j + init_position[1])
                                 draw.text(position, ch, (255, 255, 255), font=font, align="center")
@@ -61,7 +61,7 @@ for sys_font in all_fonts:
                                     + ".png"
                                 )
 
-                                file_name = os.path.join(dataset_path, file_name)
+                                file_name = os.path.join(dataset_path, ch, file_name)
                                 image.save(file_name)
                                 style_idx += 1
                         pos_idx += 1
