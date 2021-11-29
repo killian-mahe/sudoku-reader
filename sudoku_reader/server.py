@@ -1,23 +1,30 @@
 """
 Flask application.
 """
-import json
-import os
-from werkzeug.utils import secure_filename
+import traceback
+try:
 
-from flask import Flask, request, abort
-import matplotlib.pyplot as plt
-import numpy as np
+    import os
+    from werkzeug.utils import secure_filename
 
-from sudoku_reader.digits import filter_cells, predict_digit_from_picture
-from sudoku_reader.picture import (
-    binarize,
-    binary_dilatation,
-    get_largest_connected_components,
-    get_highest_spikes,
-    filter_digit_pictures,
-    create_grid_picture, perspective_transform
-)
+    from flask import Flask, request, abort
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    from sudoku_reader.algorithms import AC3, backtracking_search
+    from sudoku_reader.csp import SudokuCSP
+    from sudoku_reader.digits import filter_cells, predict_digit_from_picture
+    from sudoku_reader.picture import (
+        binarize,
+        binary_dilatation,
+        get_largest_connected_components,
+        get_highest_spikes,
+        filter_digit_pictures,
+        create_grid_picture,
+        perspective_transform,
+    )
+except Exception:
+    print(traceback.format_exc())
 
 app = Flask(__name__)
 
@@ -26,7 +33,7 @@ app = Flask(__name__)
 def upload_file():
 
     f = request.files["image"]
-    filename = os.path.join('../storage', secure_filename(f.filename))
+    filename = os.path.join("../storage", secure_filename(f.filename))
     extension = os.path.splitext(filename)[1]
 
     if extension != ".png" and extension != ".jpg" and extension != ".jpeg":
@@ -62,4 +69,11 @@ def get_grid(picture: np.array):
     for (x, y), ch in prediction:
         grid[y, x] = ch
 
-    return grid.flatten()
+    try:
+        csp = SudokuCSP(grid)
+        csp = AC3(csp)
+        assignment = backtracking_search(csp)
+
+        return csp.get_resulted_map(assignment).flatten()
+    except Exception:
+        return grid.flatten()

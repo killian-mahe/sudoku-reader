@@ -7,7 +7,7 @@ import copy
 
 import numpy as np
 
-from interfaces import Constraint
+from sudoku_reader.interfaces import Constraint
 
 
 class CSP:

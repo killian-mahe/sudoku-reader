@@ -18,7 +18,7 @@ from sudoku_reader.picture import (
     get_largest_connected_components,
     get_highest_spikes,
     filter_digit_pictures,
-    perspective_transform
+    perspective_transform,
 )
 from sudoku_reader.digits import filter_cells, predict_digit_from_picture
 from sudoku_reader.algorithms import (

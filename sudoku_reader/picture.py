@@ -32,9 +32,10 @@ def binarize(picture: np.ndarray) -> np.ndarray:
 
 
 def perspective_transform(binarized_img: np.ndarray) -> np.ndarray:
-    binarized_img = binarized_img.astype('uint8')
-    cnts = cv2.findContours(binarized_img.copy(), cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE)
+    binarized_img = binarized_img.astype("uint8")
+    cnts = cv2.findContours(
+        binarized_img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
     cnts = imutils.grab_contours(cnts)
     cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
 
@@ -44,7 +45,7 @@ def perspective_transform(binarized_img: np.ndarray) -> np.ndarray:
         approx = cv2.approxPolyDP(c, 0.02 * peri, True)
 
         if len(approx) == 4:
-            puzzleCnt = approx.reshape((4, 2)).astype('float32')
+            puzzleCnt = approx.reshape((4, 2)).astype("float32")
             break
 
     (tl, bl, br, tr) = puzzleCnt
@@ -56,11 +57,15 @@ def perspective_transform(binarized_img: np.ndarray) -> np.ndarray:
 
     margin = 50
 
-    dst = np.array([
-        [margin, margin],
-        [maxWidth - margin, margin],
-        [maxWidth - margin, maxHeight - margin],
-        [margin, maxHeight - margin]], dtype="float32")
+    dst = np.array(
+        [
+            [margin, margin],
+            [maxWidth - margin, margin],
+            [maxWidth - margin, maxHeight - margin],
+            [margin, maxHeight - margin],
+        ],
+        dtype="float32",
+    )
 
     M = cv2.getPerspectiveTransform(rect, dst)
     return cv2.warpPerspective(binarized_img, M, (maxWidth, maxHeight))

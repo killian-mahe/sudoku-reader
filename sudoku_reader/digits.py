@@ -10,7 +10,9 @@ import skimage.transform
 import keras
 
 
-MODEL = keras.models.load_model(os.path.join(pathlib.Path(__file__).parent.resolve(), "../model.h5"))
+MODEL = keras.models.load_model(
+    os.path.join(pathlib.Path(__file__).parent.resolve(), "../model.h5")
+)
 
 
 def filter_cells(digits: list):
