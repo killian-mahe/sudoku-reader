@@ -5,9 +5,11 @@ import numpy as np
 import skimage.color
 import skimage.filters
 import skimage.io
-from scipy import ndimage
+from scipy import ndimage, spatial
 from scipy.signal import argrelextrema
 from PIL import Image, ImageDraw, ImageFont
+import cv2
+import imutils
 
 
 def binarize(picture: np.ndarray) -> np.ndarray:
@@ -27,6 +29,41 @@ def binarize(picture: np.ndarray) -> np.ndarray:
 
     threshold_image = skimage.filters.threshold_sauvola(grey_img, window_size=71, k=0.1)
     return np.where(grey_img < threshold_image, np.ones((width, height)), 0)
+
+
+def perspective_transform(binarized_img: np.ndarray) -> np.ndarray:
+    binarized_img = binarized_img.astype('uint8')
+    cnts = cv2.findContours(binarized_img.copy(), cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+    cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+
+    puzzleCnt = None
+    for c in cnts:
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+
+        if len(approx) == 4:
+            puzzleCnt = approx.reshape((4, 2)).astype('float32')
+            break
+
+    (tl, bl, br, tr) = puzzleCnt
+    rect = np.array([tl, tr, br, bl])
+    distances = spatial.distance.cdist(rect, rect)
+
+    maxWidth = max(int(distances[0, 1]), int(distances[2, 3]))
+    maxHeight = max(int(distances[0, 3]), int(distances[2, 3]))
+
+    margin = 50
+
+    dst = np.array([
+        [margin, margin],
+        [maxWidth - margin, margin],
+        [maxWidth - margin, maxHeight - margin],
+        [margin, maxHeight - margin]], dtype="float32")
+
+    M = cv2.getPerspectiveTransform(rect, dst)
+    return cv2.warpPerspective(binarized_img, M, (maxWidth, maxHeight))
 
 
 def binary_dilatation(picture: np.ndarray) -> np.ndarray:

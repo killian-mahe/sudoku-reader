@@ -8,3 +8,4 @@ scikit-learn~=1.0.1
 h5py~=3.6.0
 pyyaml~=6.0
 opencv-python~=4.5.4.60
+imutils~=0.5.4

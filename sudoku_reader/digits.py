@@ -1,6 +1,7 @@
 """
 Digits treatment module.
 """
+import pathlib
 import os
 
 import numpy as np
@@ -9,7 +10,7 @@ import skimage.transform
 import keras
 
 
-MODEL = keras.models.load_model(os.path.join(os.getcwd(), "../model.h5"))
+MODEL = keras.models.load_model(os.path.join(pathlib.Path(__file__).parent.resolve(), "../model.h5"))
 
 
 def filter_cells(digits: list):
@@ -27,7 +28,8 @@ def filter_cells(digits: list):
     filtered_digits = digits.copy()
 
     for i in range(len(digits)):
-        img = skimage.transform.resize(digits[i][1], (24, 24), anti_aliasing=False)
+        img = skimage.transform.resize(filtered_digits[i][1], (32, 32), anti_aliasing=False)
+        img = np.where(img == 0.0, img, 1.0)
 
         labeled_img, nb_labels = ndimage.label(img)
         sizes = ndimage.sum_labels(img, labeled_img, range(nb_labels + 1))

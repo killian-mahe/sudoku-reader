@@ -6,6 +6,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Signal, QObject
+import matplotlib.pyplot as plt
 import numpy as np
 
 from sudoku_reader.interfaces import AlgorithmType, Resolver
@@ -17,6 +18,7 @@ from sudoku_reader.picture import (
     get_largest_connected_components,
     get_highest_spikes,
     filter_digit_pictures,
+    perspective_transform
 )
 from sudoku_reader.digits import filter_cells, predict_digit_from_picture
 from sudoku_reader.algorithms import (
@@ -100,7 +102,10 @@ class PictureImporter(QObject):
         try:
             print("Trying to import the picture")
             picture = binarize(picture)
+
             bin_picture = binary_dilatation(picture)
+
+            bin_picture = perspective_transform(bin_picture)
 
             grid_picture = get_largest_connected_components(bin_picture)
 
