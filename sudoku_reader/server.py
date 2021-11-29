@@ -5,7 +5,7 @@ import json
 import os
 from werkzeug.utils import secure_filename
 
-from flask import Flask, request, abort, url_for
+from flask import Flask, request, abort
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -16,11 +16,10 @@ from sudoku_reader.picture import (
     get_largest_connected_components,
     get_highest_spikes,
     filter_digit_pictures,
-    create_grid_picture
+    create_grid_picture, perspective_transform
 )
 
 app = Flask(__name__)
-#url_for('static', filename)
 
 
 @app.route("/resolve", methods=["POST"])
@@ -37,14 +36,17 @@ def upload_file():
 
     picture = plt.imread(filename)
     digits = get_grid(picture)
-    print(digits)
+
     create_grid_picture(digits, "static/img/return.png")
     return "/static/img/return.png"
 
 
 def get_grid(picture: np.array):
     picture = binarize(picture)
+
     bin_picture = binary_dilatation(picture)
+
+    bin_picture = perspective_transform(bin_picture)
 
     grid_picture = get_largest_connected_components(bin_picture)
 
@@ -58,6 +60,6 @@ def get_grid(picture: np.array):
 
     grid = np.zeros((9, 9), dtype=int)
     for (x, y), ch in prediction:
-        grid[x, y] = ch
+        grid[y, x] = ch
 
     return grid.flatten()

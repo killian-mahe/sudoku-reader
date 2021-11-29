@@ -28,15 +28,14 @@ def filter_cells(digits: list):
     filtered_digits = digits.copy()
 
     for i in range(len(digits)):
-        img = skimage.transform.resize(filtered_digits[i][1], (32, 32), anti_aliasing=False)
-        img = np.where(img == 0.0, img, 1.0)
+        img = np.where(filtered_digits[i][1] == 0.0, filtered_digits[i][1], 1.0)
 
         labeled_img, nb_labels = ndimage.label(img)
         sizes = ndimage.sum_labels(img, labeled_img, range(nb_labels + 1))
 
         digit_label = np.argmax(sizes)
         digit_slice = ndimage.find_objects(labeled_img == digit_label)[0]
-        img = img[digit_slice]
+        img = skimage.transform.resize(img[digit_slice], (18, 18), anti_aliasing=False)
 
         template = np.zeros((28, 28))
         width, height = img.shape
