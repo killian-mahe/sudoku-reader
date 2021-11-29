@@ -7,6 +7,7 @@ import skimage.filters
 import skimage.io
 from scipy import ndimage
 from scipy.signal import argrelextrema
+from PIL import Image, ImageDraw, ImageFont
 
 
 def binarize(picture: np.ndarray) -> np.ndarray:
@@ -156,3 +157,63 @@ def filter_digit_pictures(
                     ]
                 )
     return digits
+
+
+def create_grid_picture(digits: list, file_path: str, size: int = 900):
+    """
+    Create a sudoku png picture from the given digits list.
+
+    Parameters
+    ----------
+    digits : list
+        Flatten array of digits (empty => 0)
+    file_path : str
+        Path of the picture.
+    size : int, optional
+        Size of the picture in pixels.
+    """
+    img = Image.new("RGB", (size, size), color="white")
+    draw = ImageDraw.Draw(img)
+    margin = 0.05 * size
+    cell_width = int((size - 2 * margin) / 9)
+    for x in range(0, 10):
+        line_width = 8 if not x % 3 else 2
+        draw.line(
+            [
+                (cell_width * x + margin, margin),
+                (cell_width * x + margin, size - margin),
+            ],
+            fill=(0, 0, 0),
+            width=line_width,
+        )
+
+    for y in range(0, 10):
+        line_width = 8 if not y % 3 else 2
+        draw.line(
+            [
+                (margin, cell_width * y + margin),
+                (size - margin, cell_width * y + margin),
+            ],
+            fill=(0, 0, 0),
+            width=line_width,
+        )
+
+    font = ImageFont.truetype("arial", int(cell_width * 0.8))
+
+    i = -1
+    margin = margin + int(cell_width / 2)
+    for y in range(0, 9):
+        for x in range(0, 9):
+            i += 1
+            if digits[i] == 0:
+                continue
+            draw.text(
+                (margin + x * cell_width, margin + y * cell_width),
+                str(digits[i]),
+                (0, 0, 0),
+                align="center",
+                font=font,
+                anchor="mm",
+            )
+
+    img.save(file_path)

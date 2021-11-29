@@ -3,8 +3,9 @@ Flask application.
 """
 import json
 import os
+from werkzeug.utils import secure_filename
 
-from flask import Flask, request, abort
+from flask import Flask, request, abort, url_for
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,19 +15,20 @@ from sudoku_reader.picture import (
     binary_dilatation,
     get_largest_connected_components,
     get_highest_spikes,
-    filter_digit_pictures
+    filter_digit_pictures,
+    create_grid_picture
 )
 
 app = Flask(__name__)
+#url_for('static', filename)
 
 
-@app.route('/resolve', methods=['POST'])
+@app.route("/resolve", methods=["POST"])
 def upload_file():
 
-    f = request.files['image']
-    filename = "../storage/img.png"
+    f = request.files["image"]
+    filename = os.path.join('../storage', secure_filename(f.filename))
     extension = os.path.splitext(filename)[1]
-    print(extension)
 
     if extension != ".png" and extension != ".jpg" and extension != ".jpeg":
         abort(422)
@@ -36,7 +38,8 @@ def upload_file():
     picture = plt.imread(filename)
     digits = get_grid(picture)
     print(digits)
-    return json.dumps(digits.tolist())
+    create_grid_picture(digits, "static/img/return.png")
+    return "/static/img/return.png"
 
 
 def get_grid(picture: np.array):
@@ -55,6 +58,6 @@ def get_grid(picture: np.array):
 
     grid = np.zeros((9, 9), dtype=int)
     for (x, y), ch in prediction:
-        grid[y, x] = ch
+        grid[x, y] = ch
 
     return grid.flatten()
