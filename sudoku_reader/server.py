@@ -2,6 +2,7 @@
 Flask application.
 """
 import traceback
+import skimage.io
 try:
 
     import os
@@ -41,7 +42,7 @@ def upload_file():
 
     f.save(filename)
 
-    picture = plt.imread(filename)
+    picture = skimage.io.imread(filename)
     digits = get_grid(picture)
 
     create_grid_picture(digits, "static/img/return.png")
@@ -63,11 +64,12 @@ def get_grid(picture: np.array):
     digits = filter_digit_pictures(bin_picture, y_proj, x_proj)
 
     digits = filter_cells(digits)
+    print(digits[1][1])
     prediction = predict_digit_from_picture(digits)
 
     grid = np.zeros((9, 9), dtype=int)
     for (x, y), ch in prediction:
-        grid[y, x] = ch
+        grid[x, y] = ch
 
     try:
         csp = SudokuCSP(grid)

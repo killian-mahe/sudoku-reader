@@ -46,7 +46,7 @@ def filter_cells(digits: list):
 
         template[padding_x : padding_x + width, padding_y : padding_y + height] = img
 
-        filtered_digits[i][1] = template
+        filtered_digits[i][1] = template.astype('uint8')
 
     return filtered_digits
 

@@ -101,6 +101,7 @@ class PictureImporter(QObject):
     def do_work(self, picture: np.ndarray):
         try:
             print("Trying to import the picture")
+            print(picture)
             picture = binarize(picture)
 
             bin_picture = binary_dilatation(picture)
@@ -115,6 +116,7 @@ class PictureImporter(QObject):
             digits = filter_digit_pictures(bin_picture, y_proj, x_proj)
 
             digits = filter_cells(digits)
+            print(digits[0][1])
             prediction = predict_digit_from_picture(digits)
 
             grid = np.zeros((9, 9), dtype=int)
