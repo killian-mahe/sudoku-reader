@@ -67,19 +67,27 @@ You can also use the Dockerfile to use with Docker.
 
 Before clonning the repository, you should create a new virtual environment (using `venv` for exemple).
 
-1. Clone the project
+1. Clone the project (or use the src folder)
    ```sh
    git clone https://github.com/killian-mahe/sudoku-reader.git
    ```
-2. Install virtual environment
+2. Install the virtual environment
    ```sh
    cd sudoku-reader && python3 -m venv env
    ```
-3. Activate the new environment
+3. Activate the new environment (on Linux)
    ```sh
    source env/bin/activate
    ```
-4. Install required packages
+4. Activate the new environment (on Windows with powershell)
+   ```sh
+   env\Scripts\Activate
+   ```
+4. Activate the new environment (on Windows with CMD)
+   ```sh
+   env\Scripts\activate.bat
+   ```
+5. Install required packages
    ```sh
    pip3 install -r requirements.txt
    ```
