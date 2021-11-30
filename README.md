@@ -94,9 +94,27 @@ Before clonning the repository, you should create a new virtual environment (usi
 
 ### Use
 
+## Desktop application
+
 1. Start the project
     ```sh
     python sudoku_reader
+    ```
+    
+## Mobile application
+
+1. Add flask to env path (on powershell)
+    ```sh
+    $env:FLASK_APP = "server"
+    ```
+2. Add flask to env path (on CMD)
+    ```sh
+    set FLASK_APP=server
+    ```
+3. Start the server
+    ```sh
+    cd sudoku_reader
+    flask run --host=0.0.0.0
     ```
 
 <!-- ROADMAP -->
